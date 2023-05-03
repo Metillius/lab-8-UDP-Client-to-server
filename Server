@@ -1,0 +1,148 @@
+import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+
+
+class PassengerThread implements Runnable {
+    // I added final keyword to these so they are not changeable
+    private final String filename;
+    private final HashMap<String, int[]> districtPassengerCount;
+    private PrintWriter printWriter;
+
+    public PassengerThread(String s, HashMap<String, int[]> districtPassengerCount, PrintWriter printWriter) {
+        this.filename = s;
+        this.districtPassengerCount = districtPassengerCount;
+        this.printWriter = printWriter;
+    }
+
+    public void run() {
+
+        ArrayList<String> CaptainKiddArr = new ArrayList<String>();
+
+
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filename ));
+            String line = reader.readLine();
+
+            int passengerNumber = 0;
+            int tripNumber = 0;
+            double passengerPerTrip =0;
+
+
+            while ((line = reader.readLine()) != null) {
+
+                String[] x = line.split(",");
+                int trips = Integer.parseInt(x[2]);
+                int passengers = Integer.parseInt(x[3]);
+
+                tripNumber += trips;
+                passengerNumber += passengers;
+
+
+            }
+
+            passengerPerTrip = passengerNumber/tripNumber;
+
+
+            CaptainKiddArr.add(String.valueOf(passengerNumber));
+            CaptainKiddArr.add(String.valueOf(tripNumber));
+
+
+            CaptainKiddArr.add(String.valueOf(passengerPerTrip));
+
+
+            StringWriter stringWriter = new StringWriter();
+            stringWriter.write("Total number of passengers: " + passengerNumber + '\n' +"Total number of trips: " + tripNumber+ '\n'+"Average number of passengers per trip: " + passengerPerTrip );
+            /*stringWriter.write("Total number of trips: " + tripNumber) ;
+            stringWriter.write("Average number of passengers per trip: " + passengerPerTrip);*/
+            String message = stringWriter.toString();
+            printWriter.println(message);
+
+            System.out.println("Total number of passengers: " + passengerNumber );
+            System.out.println("Total number of trips: " + tripNumber );
+            System.out.println("Average number of passengers per trip: " + passengerPerTrip);
+
+
+            //int[] counts = new int[] {passengerNumber, (int) Math.round(averagePassengers)};
+            //districtPassengerCount.put(filename, counts);
+
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+}
+
+
+
+
+
+
+
+public class Server {
+    public static void main(String args[]) throws Exception {
+        DatagramSocket socket = new DatagramSocket(8888);
+        byte data[] = new byte[150];
+        DatagramPacket packet = new DatagramPacket(data, data.length);
+
+        while (true) {
+            socket.receive(packet);
+
+
+            byte packetData[] = packet.getData();
+            int packetSize = packet.getLength();
+            String s2 = new String(packetData, 0, packetSize);
+            // turning the destinationlists to a arraylist
+
+            String input = s2;;
+
+            String[] destinations = input.split(",");
+
+            ArrayList<String> destinationList = new ArrayList<>();
+
+            for (String destination : destinations) {
+                destinationList.add(destination.trim());
+            }
+
+            HashMap<String, int[]> districtPassengerCount = new HashMap<>();
+
+            for (int i = 0; i < destinationList.size(); i++) {
+
+
+                System.out.println("Received packet from: " + packet.getAddress() + " : " + packet.getPort() + ", Message: " + destinationList.get(i));
+
+            }
+
+            packet.setData(new byte[150],0,150);
+            socket.receive(packet);
+
+
+
+             packetSize = packet.getLength();
+
+            String s3 = new String(packet.getData(), 0, packetSize);
+            System.out.println(s3);
+
+
+            /*PrintWriter printWriter = new PrintWriter(connectionSocket.getOutputStream(), true);
+            int index = destinationList.indexOf(reformedClientSentence);
+
+            Thread tx = new Thread(new PassengerThread(destinationList.get(index), districtPassengerCount,  printWriter));
+            tx.start();
+            tx.join();*/
+
+
+
+
+
+                //
+            //System.out.println(new Date() + "  " + packet.getAddress() + " : " + packet.getPort() + " " + s2);
+            socket.send(packet);
+        }
+    }
+}
