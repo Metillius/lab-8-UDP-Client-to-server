@@ -1,0 +1,102 @@
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+public class Client {
+    public static void main(String args[]) throws IOException {
+        InetAddress address;
+        DatagramSocket socket;
+        DatagramPacket packet;
+
+        BufferedReader inFromUser = new BufferedReader(new InputStreamReader(System.in));
+
+        try {
+            address = InetAddress.getByName("localhost");
+            socket = new DatagramSocket();
+            String message1 = "Balcova.csv,Bornova.csv,Gaziemir.csv,Karabaglar.csv,Karsiyaka.csv,Konak.csv,Seferihisar.csv,Urla.csv";
+
+
+
+
+            byte data[] = message1.getBytes();
+            packet = new DatagramPacket(data, data.length, address, 8888);
+            socket.send(packet); // send the packet
+
+            ArrayList<String> destinationList = new ArrayList<>();
+            destinationList.add("Balcova");
+            destinationList.add("Bornova");
+            destinationList.add("Gaziemir");
+            destinationList.add("Karabaglar");
+            destinationList.add("Karsiyaka");
+            destinationList.add("Konak");
+            destinationList.add("Balcova");
+            destinationList.add("Seferihisar");
+            destinationList.add("Urla");
+
+
+
+
+            System.out.println("Select a district name to server to see the stats: (Type exit to quit)");
+            String selection = inFromUser.readLine();
+
+            byte data2[] = selection.getBytes();
+            packet = new DatagramPacket(data2, data2.length, address, 8888);
+            socket.send(packet); // send the packet
+
+            /*while(!selection.equals("exit") ){
+
+
+
+
+
+
+
+
+
+                /*if(destinationList.contains(selection)){
+
+                    String ThreadAnswer = inFromServer.readLine();
+                    String ThreadAnswer2 = inFromServer.readLine();
+                    String ThreadAnswer3 = inFromServer.readLine();
+
+                    System.out.println(ThreadAnswer);
+                    System.out.println(ThreadAnswer2);
+                    System.out.println(ThreadAnswer3);
+                }
+
+                else {
+                    System.out.println("Invalid entry");
+                }
+
+
+
+                modifiedSentence = inFromServer.readLine();
+
+                System.out.println( modifiedSentence);
+                selection = inFromUser.readLine();
+
+
+
+
+            */
+           /* if (modifiedSentence == "exit"){
+                System.out.println("Thank you for using the system...");
+            }*/
+
+    /*    else{
+            System.out.println("Invalid entry");
+        }
+
+     */
+
+
+
+
+
+
+
+
+
+        } catch (IOException e) {}
+    }
+}
