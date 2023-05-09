@@ -37,11 +37,33 @@ public class Client {
 
 
             System.out.println("Select a district name to server to see the stats: (Type exit to quit)");
+
+            //This is how we send the data to the server
             String selection = inFromUser.readLine();
 
             byte data2[] = selection.getBytes();
             packet = new DatagramPacket(data2, data2.length, address, 8888);
             socket.send(packet); // send the packet
+
+
+            //This should be how we receive a message from server
+            byte[] buffer = new byte[1024];
+            DatagramPacket receivePacket = new DatagramPacket(buffer, buffer.length);
+            socket.receive(receivePacket);
+            String receivedMessage = new String(receivePacket.getData(), 0, receivePacket.getLength());
+            System.out.println(receivedMessage);
+            socket.close();
+
+
+            byte[] buffer2 = new byte[1024];
+            DatagramPacket receivePacket2 = new DatagramPacket(buffer2, buffer2.length);
+            socket.receive(receivePacket2);
+            String receivedMessage2 = new String(receivePacket2.getData(), 0, receivePacket2.getLength());
+            System.out.println(receivedMessage2);
+            socket.close();
+
+
+
 
             /*while(!selection.equals("exit") ){
 
