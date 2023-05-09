@@ -1,21 +1,32 @@
+
+
+//Henüz while loopu eklemedim. Sürekli gönder clienttan al gönder clienttan al yapıyorum ve threadim 3 satır gönderdiği için 3 kere yapmak
+// çok mantıksız geldi ve beni tatmin etmedi, bu yüzden sizce daha mantıklı bir yolu var mı diye sormak istedim
+
+
+
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
 
 class PassengerThread implements Runnable {
-    // I added final keyword to these so they are not changeable
     private final String filename;
     private final HashMap<String, int[]> districtPassengerCount;
-    private PrintWriter printWriter;
+    private final DatagramSocket socket;
+    private final InetAddress clientAddress;
+    private final int clientPort;
 
-    public PassengerThread(String s, HashMap<String, int[]> districtPassengerCount, PrintWriter printWriter) {
+    public PassengerThread(String s, HashMap<String, int[]> districtPassengerCount, DatagramSocket socket, InetAddress clientAddress, int clientPort) {
         this.filename = s;
         this.districtPassengerCount = districtPassengerCount;
-        this.printWriter = printWriter;
+        this.socket = socket;
+        this.clientAddress = clientAddress;
+        this.clientPort = clientPort;
     }
 
     public void run() {
@@ -56,20 +67,12 @@ class PassengerThread implements Runnable {
 
             StringWriter stringWriter = new StringWriter();
             stringWriter.write("Total number of passengers: " + passengerNumber + '\n' +"Total number of trips: " + tripNumber+ '\n'+"Average number of passengers per trip: " + passengerPerTrip );
-            /*stringWriter.write("Total number of trips: " + tripNumber) ;
-            stringWriter.write("Average number of passengers per trip: " + passengerPerTrip);*/
             String message = stringWriter.toString();
-            printWriter.println(message);
+            // send the response back to the client
+            byte[] responseData = message.getBytes();
+            DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, clientAddress, clientPort);
+            socket.send(responsePacket);
 
-            System.out.println("Total number of passengers: " + passengerNumber );
-            System.out.println("Total number of trips: " + tripNumber );
-            System.out.println("Average number of passengers per trip: " + passengerPerTrip);
-
-
-            //int[] counts = new int[] {passengerNumber, (int) Math.round(averagePassengers)};
-            //districtPassengerCount.put(filename, counts);
-
-            reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -114,19 +117,60 @@ public class Server {
             for (int i = 0; i < destinationList.size(); i++) {
 
 
-                System.out.println("Received packet from: " + packet.getAddress() + " : " + packet.getPort() + ", Message: " + destinationList.get(i));
+                System.out.println("Received packet from: " + packet.getAddress() + " : " + packet.getPort() + ", Message: " + destinationList.get(i) + ". Assigning thread...");
+                System.out.println();
 
             }
+
+            System.out.println("Processing done! waiting for a query");
+
+
+            //This is how we get messages from the client
 
             packet.setData(new byte[150],0,150);
             socket.receive(packet);
 
 
 
-             packetSize = packet.getLength();
+            packetSize = packet.getLength();
 
             String s3 = new String(packet.getData(), 0, packetSize);
-            System.out.println(s3);
+            System.out.println("yelp");
+            System.out.println("Received query: " + s3);
+            System.out.println("Reply send to client. Awaiting for a query...");
+
+            String right_checker = s3+".csv";
+
+
+            if(destinationList.contains(right_checker)){
+                System.out.println("Yippie-yi-o");
+
+                //this is the beginning of how we send data to the client
+                byte data2[] = packet.getData();
+                int packetsize2 = packet.getLength();
+                String showStat = "Here are the stats for the district "+ s3 + ": ";
+
+
+                // Create a new packet to send a string back
+                byte[] responseData = showStat.getBytes();
+                DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length, packet.getAddress(), packet.getPort());
+                socket.send(responsePacket);
+                //this is the end of how we send data to the client
+
+                int index = destinationList.indexOf(right_checker);
+
+
+                Thread tx = new Thread(new PassengerThread(destinationList.get(index), districtPassengerCount, socket, packet.getAddress(), packet.getPort()));
+                tx.start();
+                tx.join();
+
+            }
+
+
+
+
+
+
 
 
             /*PrintWriter printWriter = new PrintWriter(connectionSocket.getOutputStream(), true);
@@ -142,7 +186,7 @@ public class Server {
 
                 //
             //System.out.println(new Date() + "  " + packet.getAddress() + " : " + packet.getPort() + " " + s2);
-            socket.send(packet);
+
         }
     }
 }
